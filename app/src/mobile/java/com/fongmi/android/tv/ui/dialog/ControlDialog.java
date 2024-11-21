@@ -89,7 +89,6 @@ public class ControlDialog extends BaseDialog implements ParseAdapter.OnClickLis
     protected void initView() {
         if (player == null) dismiss();
         if (player == null) return;
-        binding.speed.setValue(Math.max(player.getSpeed(), 0.2f));
         binding.player.setText(parent.control.action.player.getText());
         binding.decode.setText(parent.control.action.decode.getText());
         binding.ending.setText(parent.control.action.ending.getText());
@@ -100,8 +99,10 @@ public class ControlDialog extends BaseDialog implements ParseAdapter.OnClickLis
         binding.dpspeed.setActivated(Setting.isDisplaySpeed());
         binding.dpduration.setActivated(Setting.isDisplayDuration());
         binding.dpminiprogress.setActivated(Setting.isDisplayMiniProgress());
+        binding.dpvideotitle.setActivated(Setting.isDisplayVideoTitle());
         setTrackVisible();
         setScaleText();
+        setPlayer();
         setParse();
     }
 
@@ -125,11 +126,12 @@ public class ControlDialog extends BaseDialog implements ParseAdapter.OnClickLis
         binding.dpspeed.setOnClickListener(v -> displaySpeed());
         binding.dpduration.setOnClickListener(v -> displayDuration());
         binding.dpminiprogress.setOnClickListener(v -> displayMiniProgress());
+        binding.dpvideotitle.setOnClickListener(v -> displayVideoTitle());
     }
 
     private void displayTime() {
         boolean display = Setting.isDisplayTime();
-        parent.display.time.setVisibility(!display ? View.VISIBLE : View.GONE);
+        parent.display.clock.setVisibility(!display ? View.VISIBLE : View.GONE);
         Setting.putDisplayTime(!display);
         binding.dptime.setActivated(!display);
     }
@@ -153,6 +155,13 @@ public class ControlDialog extends BaseDialog implements ParseAdapter.OnClickLis
         parent.display.progress.setVisibility(!display ? View.VISIBLE : View.GONE);
         Setting.putDisplayMiniProgress(!display);
         binding.dpminiprogress.setActivated(!display);
+    }
+
+    private void displayVideoTitle() {
+        boolean display = Setting.isDisplayVideoTitle();
+        parent.display.titleLayout.setVisibility(!display ? View.VISIBLE : View.GONE);
+        Setting.putDisplayVideoTitle(!display);
+        binding.dpvideotitle.setActivated(!display);
     }
 
     private void onTimer(View view) {
@@ -217,6 +226,13 @@ public class ControlDialog extends BaseDialog implements ParseAdapter.OnClickLis
 
     public void updateDecode() {
         binding.decode.setText(parent.control.action.decode.getText());
+    }
+
+    public void setPlayer() {
+        binding.speed.setEnabled(player.canAdjustSpeed());
+        binding.speed.setValue(Math.max(((int) (player.getSpeed()/0.25f) * 0.25f), 0.5f));
+        binding.player.setText(parent.control.action.player.getText());
+        binding.decode.setVisibility(parent.control.action.decode.getVisibility());
     }
 
     public void setParseVisible(boolean visible) {

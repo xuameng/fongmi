@@ -2,6 +2,7 @@ package com.fongmi.android.tv.ui.activity;
 
 import android.Manifest;
 import android.content.Intent;
+import android.graphics.drawable.Drawable;
 import android.text.TextUtils;
 import android.view.KeyEvent;
 import android.view.View;
@@ -21,6 +22,11 @@ import androidx.viewbinding.ViewBinding;
 import androidx.viewpager.widget.ViewPager;
 
 import com.android.cast.dlna.dmr.DLNARendererService;
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.DataSource;
+import com.bumptech.glide.load.engine.GlideException;
+import com.bumptech.glide.request.RequestListener;
+import com.bumptech.glide.request.target.Target;
 import com.fongmi.android.tv.App;
 import com.fongmi.android.tv.R;
 import com.fongmi.android.tv.Setting;
@@ -103,16 +109,16 @@ public class HomeActivity extends BaseActivity implements CustomTitleView.Listen
     @Override
     protected void initView() {
         DLNARendererService.Companion.start(this, R.drawable.ic_logo);
-        mClock = Clock.create(mBinding.time).format("MM/dd HH:mm:ss");
+        mClock = Clock.create(mBinding.clock).format("MM/dd HH:mm:ss");
         Updater.get().release().start(this);
         Server.get().start();
+        Tbs.init();
         setTitleView();
         setRecyclerView();
         setViewModel();
         setHomeType();
         setPager();
         initConfig();
-        Tbs.init();
     }
 
     @Override
@@ -148,10 +154,10 @@ public class HomeActivity extends BaseActivity implements CustomTitleView.Listen
         mBinding.homeSiteLock.setVisibility(Setting.isHomeSiteLock() ? View.VISIBLE : View.GONE);
         if (Setting.getHomeUI() == 0) {
             mBinding.title.setTextSize(24);
-            mBinding.time.setTextSize(24);
+            mBinding.clock.setTextSize(24);
         } else {
             mBinding.title.setTextSize(20);
-            mBinding.time.setTextSize(20);
+            mBinding.clock.setTextSize(20);
         }
     }
 
@@ -314,31 +320,27 @@ public class HomeActivity extends BaseActivity implements CustomTitleView.Listen
     private Callback getCallback(String success) {
         return new Callback() {
             @Override
+            public void success(String result) {
+                Notify.show(result);
+            }
+
+            @Override
             public void success() {
                 checkAction(getIntent());
                 RefreshEvent.video();
+                setLogo();
                 if (!TextUtils.isEmpty(success)) Notify.show(success);
             }
 
             @Override
             public void error(String msg) {
-                if (TextUtils.isEmpty(msg) && AppDatabase.getBackup().exists()) onRestore();
-                else if (getHomeFragment().init) getHomeFragment().mBinding.progressLayout.showContent();
+                if (getHomeFragment().inited) getHomeFragment().mBinding.progressLayout.showContent();
                 else App.post(() -> getHomeFragment().mBinding.progressLayout.showContent(), 1000);
                 mResult = Result.empty();
                 Notify.show(msg);
+                setLoading(false);
             }
         };
-    }
-
-    private void onRestore() {
-        PermissionX.init(this).permissions(Manifest.permission.WRITE_EXTERNAL_STORAGE).request((allGranted, grantedList, deniedList) -> AppDatabase.restore(new Callback() {
-            @Override
-            public void success() {
-                if (allGranted) initConfig();
-                else getHomeFragment().mBinding.progressLayout.showContent();
-            }
-        }));
     }
 
     private void load(Config config, String success) {
@@ -381,7 +383,8 @@ public class HomeActivity extends BaseActivity implements CustomTitleView.Listen
         FileUtil.clearCache(new Callback() {
             @Override
             public void success() {
-                setConfig(VodConfig.get().getConfig().json("").save(), ResUtil.getString(R.string.config_refreshed));
+                Config config = VodConfig.get().getConfig().json("").save();
+                if (!config.isEmpty()) setConfig(config, ResUtil.getString(R.string.config_refreshed));
             }
         });
     }
@@ -408,6 +411,9 @@ public class HomeActivity extends BaseActivity implements CustomTitleView.Listen
     public void onRefreshEvent(RefreshEvent event) {
         super.onRefreshEvent(event);
         switch (event.getType()) {
+            case CONFIG:
+                setLogo();
+                break;
             case VIDEO:
                 homeContent();
                 break;
@@ -449,6 +455,7 @@ public class HomeActivity extends BaseActivity implements CustomTitleView.Listen
             @Override
             public void success() {
                 RefreshEvent.history();
+                RefreshEvent.config();
                 RefreshEvent.video();
                 onCastEvent(event);
             }
@@ -466,6 +473,26 @@ public class HomeActivity extends BaseActivity implements CustomTitleView.Listen
 
     public void setLoading(boolean loading) {
         this.loading = loading;
+    }
+
+    private void setLogo() {
+        Glide.with(App.get()).load(UrlUtil.convert(VodConfig.get().getConfig().getLogo())).circleCrop().override(Target.SIZE_ORIGINAL, Target.SIZE_ORIGINAL).listener(getListener()).into(mBinding.logo);
+    }
+
+    private RequestListener<Drawable> getListener() {
+        return new RequestListener<Drawable>() {
+            @Override
+            public boolean onLoadFailed(@Nullable GlideException e, Object model, @NonNull Target<Drawable> target, boolean isFirstResource) {
+                mBinding.logo.setVisibility(View.GONE);
+                return false;
+            }
+
+            @Override
+            public boolean onResourceReady(@NonNull Drawable resource, @NonNull Object model, Target<Drawable> target, @NonNull DataSource dataSource, boolean isFirstResource) {
+                mBinding.logo.setVisibility(View.VISIBLE);
+                return false;
+            }
+        };
     }
 
     private void setFocus() {
@@ -519,9 +546,9 @@ public class HomeActivity extends BaseActivity implements CustomTitleView.Listen
     protected void onBackPress() {
         if (isVisible(mBinding.recycler) && mBinding.recycler.getSelectedPosition() != 0) {
             mBinding.recycler.scrollToPosition(0);
-        } else if (mPageAdapter != null && getHomeFragment().init && getHomeFragment().mBinding.progressLayout.isProgress()) {
+        } else if (mPageAdapter != null && getHomeFragment().inited && getHomeFragment().mBinding.progressLayout.isProgress()) {
             getHomeFragment().mBinding.progressLayout.showContent();
-        } else if (mPageAdapter != null && getHomeFragment().init && getHomeFragment().mPresenter != null && getHomeFragment().mPresenter.isDelete()) {
+        } else if (mPageAdapter != null && getHomeFragment().inited && getHomeFragment().mPresenter != null && getHomeFragment().mPresenter.isDelete()) {
             getHomeFragment().setHistoryDelete(false);
         } else if (getHomeFragment().canBack()) {
             getHomeFragment().goBack();

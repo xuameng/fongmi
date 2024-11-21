@@ -3,7 +3,9 @@ plugins {
 }
 
 android {
-    compileSdk 34
+    namespace 'com.p2p'
+
+    compileSdk 35
 
     defaultConfig {
         minSdk 21

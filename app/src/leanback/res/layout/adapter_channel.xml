@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<com.fongmi.android.tv.ui.custom.CustomLeftRightLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="wrap_content"
     android:layout_height="56dp"
@@ -42,4 +42,12 @@
         android:textStyle="bold"
         tools:text="CNN" />
 
-</LinearLayout>
+    <ImageView
+        android:id="@+id/epg"
+        android:layout_width="24dp"
+        android:layout_height="24dp"
+        android:layout_marginStart="4dp"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:src="@drawable/ic_action_arrow" />
+
+</com.fongmi.android.tv.ui.custom.CustomLeftRightLayout>

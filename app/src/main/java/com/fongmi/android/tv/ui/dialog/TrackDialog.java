@@ -20,7 +20,7 @@ import com.fongmi.android.tv.bean.Sub;
 import com.fongmi.android.tv.bean.Track;
 import com.fongmi.android.tv.databinding.DialogTrackBinding;
 import com.fongmi.android.tv.player.Players;
-import com.fongmi.android.tv.player.TrackNameProvider;
+import com.fongmi.android.tv.player.custom.TrackNameProvider;
 import com.fongmi.android.tv.ui.adapter.TrackAdapter;
 import com.fongmi.android.tv.ui.custom.SpaceItemDecoration;
 import com.fongmi.android.tv.utils.FileChooser;
@@ -37,10 +37,10 @@ public final class TrackDialog extends BaseDialog implements TrackAdapter.OnClic
     private final TrackNameProvider provider;
     private final TrackAdapter adapter;
     private DialogTrackBinding binding;
-    private FragmentActivity activity;
     private Listener listener;
     private ChooserListener cListener;
     private Players player;
+    private boolean vod;
     private int type;
 
     public static TrackDialog create() {
@@ -50,11 +50,6 @@ public final class TrackDialog extends BaseDialog implements TrackAdapter.OnClic
     public TrackDialog() {
         this.adapter = new TrackAdapter(this);
         this.provider = new TrackNameProvider();
-    }
-
-    public TrackDialog type(int type) {
-        this.type = type;
-        return this;
     }
 
     public TrackDialog chooser(ChooserListener listener) {
@@ -67,11 +62,20 @@ public final class TrackDialog extends BaseDialog implements TrackAdapter.OnClic
         return this;
     }
 
+    public TrackDialog vod(boolean vod) {
+        this.vod = vod;
+        return this;
+    }
+
+    public TrackDialog type(int type) {
+        this.type = type;
+        return this;
+    }
+
     public void show(FragmentActivity activity) {
         for (Fragment f : activity.getSupportFragmentManager().getFragments()) if (f instanceof BottomSheetDialogFragment) return;
         show(activity.getSupportFragmentManager(), null);
         this.listener = (Listener) activity;
-        this.activity = activity;
     }
 
     @Override
@@ -86,19 +90,19 @@ public final class TrackDialog extends BaseDialog implements TrackAdapter.OnClic
         binding.recycler.addItemDecoration(new SpaceItemDecoration(1, 16));
         binding.recycler.post(() -> binding.recycler.scrollToPosition(adapter.getSelected()));
         binding.recycler.setVisibility(adapter.getItemCount() == 0 ? View.GONE : View.VISIBLE);
-        binding.choose.setVisibility(type == C.TRACK_TYPE_TEXT && player.isExo() ? View.VISIBLE : View.GONE);
-        binding.size.setVisibility(type == C.TRACK_TYPE_TEXT ? View.VISIBLE : View.GONE);
+        binding.choose.setVisibility(type == C.TRACK_TYPE_TEXT && player.isExo() && vod ? View.VISIBLE : View.GONE);
+        binding.subtitle.setVisibility(type == C.TRACK_TYPE_TEXT ? View.VISIBLE : View.GONE);
         binding.title.setText(ResUtil.getStringArray(R.array.select_track)[type - 1]);
     }
 
     @Override
     protected void initEvent() {
-        binding.size.setOnClickListener(this::showSubtitle);
         binding.choose.setOnClickListener(this::showChooser);
+        binding.subtitle.setOnClickListener(this::onSubtitle);
     }
 
-    private void showSubtitle(View view) {
-        SubtitleDialog.create(activity).listen(true).show();
+    private void onSubtitle(View view) {
+        listener.onSubtitleClick();
         dismiss();
     }
 
@@ -165,6 +169,8 @@ public final class TrackDialog extends BaseDialog implements TrackAdapter.OnClic
     public interface Listener {
 
         void onTrackClick(Track item);
+
+        void onSubtitleClick();
     }
 
     public interface ChooserListener {

@@ -106,7 +106,7 @@ public class Track {
     }
 
     public boolean isIjk(int player) {
-        return getPlayer() == player && player != Players.EXO;
+        return getPlayer() == player && (player == Players.IJK || player == Players.SYS);
     }
 
     public Track toggle() {
@@ -120,5 +120,9 @@ public class Track {
 
     public static List<Track> find(String key) {
         return AppDatabase.get().getTrackDao().find(key);
+    }
+
+    public static void delete(String key) {
+        AppDatabase.get().getTrackDao().delete(key);
     }
 }

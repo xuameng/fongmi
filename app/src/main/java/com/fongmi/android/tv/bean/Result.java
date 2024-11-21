@@ -70,6 +70,8 @@ public class Result implements Parcelable {
     private String format;
     @SerializedName("click")
     private String click;
+    @SerializedName("js")
+    private String js;
     @SerializedName("key")
     private String key;
     @SerializedName("pagecount")
@@ -80,6 +82,8 @@ public class Result implements Parcelable {
     private Integer code;
     @SerializedName("jx")
     private Integer jx;
+    @SerializedName("drm")
+    private Drm drm;
 
     public static Result objectFrom(String str) {
         try {
@@ -96,7 +100,7 @@ public class Result implements Parcelable {
 
     public static Result fromXml(String str) {
         try {
-            return new Persister().read(Result.class, str).trans();
+            return new Persister().read(Result.class, str, false).trans();
         } catch (Exception e) {
             return empty();
         }
@@ -116,6 +120,7 @@ public class Result implements Parcelable {
 
     public static Result error(String msg) {
         Result result = new Result();
+        result.setParse(0);
         result.setMsg(msg);
         return result;
     }
@@ -241,6 +246,14 @@ public class Result implements Parcelable {
         this.click = click;
     }
 
+    public String getJs() {
+        return TextUtils.isEmpty(js) ? "" : js;
+    }
+
+    public void setJs(String js) {
+        this.js = js;
+    }
+
     public String getKey() {
         return TextUtils.isEmpty(key) ? "" : key;
     }
@@ -271,6 +284,10 @@ public class Result implements Parcelable {
 
     public Integer getJx() {
         return jx == null ? 0 : jx;
+    }
+
+    public Drm getDrm() {
+        return drm;
     }
 
     public boolean hasMsg() {

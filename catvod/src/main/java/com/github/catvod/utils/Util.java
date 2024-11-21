@@ -19,20 +19,40 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Enumeration;
 
+import okhttp3.OkHttp;
+
 public class Util {
 
-    public static final String CHROME = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36";
+    public static final String OKHTTP = "okhttp/" + OkHttp.VERSION;
+    public static final String CHROME = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36";
+    public static final int URL_SAFE = Base64.DEFAULT | Base64.URL_SAFE | Base64.NO_WRAP;
 
     public static String base64(String s) {
         return base64(s.getBytes());
     }
 
     public static String base64(byte[] bytes) {
-        return Base64.encodeToString(bytes, Base64.DEFAULT | Base64.NO_WRAP);
+        return base64(bytes, Base64.DEFAULT | Base64.NO_WRAP);
+    }
+
+    public static String base64(String s, int flags) {
+        return base64(s.getBytes(), flags);
+    }
+
+    public static String base64(byte[] bytes, int flags) {
+        return Base64.encodeToString(bytes, flags);
+    }
+
+    public static byte[] decode(String s) {
+        return decode(s, Base64.DEFAULT | Base64.NO_WRAP);
+    }
+
+    public static byte[] decode(String s, int flags) {
+        return Base64.decode(s, flags);
     }
 
     public static String basic(String userInfo) {
-        return "Basic " + base64(userInfo);
+        return "Basic " + base64(userInfo, Base64.NO_WRAP);
     }
 
     public static byte[] hex2byte(String s) {
@@ -61,12 +81,11 @@ public class Util {
 
     public static String md5(File file) {
         try {
-            if (!file.exists()) return "";
             MessageDigest digest = MessageDigest.getInstance("MD5");
             FileInputStream fis = new FileInputStream(file);
-            byte[] byteArray = new byte[1024];
+            byte[] bytes = new byte[4096];
             int count;
-            while ((count = fis.read(byteArray)) != -1) digest.update(byteArray, 0, count);
+            while ((count = fis.read(bytes)) != -1) digest.update(bytes, 0, count);
             fis.close();
             StringBuilder sb = new StringBuilder();
             for (byte b : digest.digest()) sb.append(Integer.toString((b & 0xff) + 0x100, 16).substring(1));

@@ -1,9 +1,6 @@
 package com.fongmi.android.tv.utils;
 
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.graphics.Canvas;
-import android.graphics.RectF;
 import android.graphics.drawable.Drawable;
 import android.text.TextUtils;
 import android.view.View;
@@ -27,16 +24,23 @@ import com.fongmi.android.tv.Setting;
 import com.github.catvod.utils.Json;
 import com.google.common.net.HttpHeaders;
 
-import java.io.ByteArrayOutputStream;
 import java.util.Map;
 
 import jahirfiquitiva.libs.textdrawable.TextDrawable;
 
 public class ImgUtil {
 
+    private static ObjectKey getSignature(String url) {
+        return new ObjectKey(url + "_" + Setting.getQuality());
+    }
+
+    public static void load(String url, CustomTarget<Bitmap> target) {
+        if (!TextUtils.isEmpty(url)) Glide.with(App.get()).asBitmap().load(getUrl(url)).skipMemoryCache(true).dontAnimate().signature(getSignature(url)).into(target);
+    }
+
     public static void load(String url, int error, CustomTarget<Drawable> target) {
         if (TextUtils.isEmpty(url)) target.onLoadFailed(ResUtil.getDrawable(error));
-        else Glide.with(App.get()).load(getUrl(url)).error(error).skipMemoryCache(true).dontAnimate().signature(new ObjectKey(url + "_" + Setting.getQuality())).into(target);
+        else Glide.with(App.get()).asDrawable().load(getUrl(url)).error(error).skipMemoryCache(true).dontAnimate().signature(getSignature(url)).into(target);
     }
 
     public static void rect(String text, String url, ImageView view) {
@@ -49,7 +53,7 @@ public class ImgUtil {
 
     public static void load(String text, String url, ImageView view, ImageView.ScaleType scaleType, boolean rect) {
         view.setScaleType(scaleType);
-        if (!TextUtils.isEmpty(url)) Glide.with(App.get()).asBitmap().load(getUrl(url)).placeholder(R.drawable.ic_img_loading).skipMemoryCache(true).dontAnimate().sizeMultiplier(Setting.getThumbnail()).signature(new ObjectKey(url + "_" + Setting.getQuality())).listener(getListener(view, scaleType)).into(view);
+        if (!TextUtils.isEmpty(url)) Glide.with(App.get()).asBitmap().load(getUrl(url)).placeholder(R.drawable.ic_img_loading).skipMemoryCache(true).dontAnimate().sizeMultiplier(Setting.getThumbnail()).signature(getSignature(url)).listener(getListener(view, scaleType)).into(view);
         else if (text.length() > 0) view.setImageDrawable(getTextDrawable(text.substring(0, 1), rect));
         else view.setImageResource(R.drawable.ic_img_error);
     }
@@ -64,7 +68,7 @@ public class ImgUtil {
     public static void loadLive(String url, ImageView view) {
         view.setVisibility(TextUtils.isEmpty(url) ? View.GONE : View.VISIBLE);
         if (TextUtils.isEmpty(url)) view.setImageResource(R.drawable.ic_img_empty);
-        else Glide.with(App.get()).asBitmap().load(url).error(R.drawable.ic_img_empty).skipMemoryCache(true).dontAnimate().signature(new ObjectKey(url)).into(view);
+        else Glide.with(App.get()).asBitmap().load(url).error(R.drawable.ic_img_empty).skipMemoryCache(true).dontAnimate().signature(getSignature(url)).into(view);
     }
 
     private static Drawable getTextDrawable(String text, boolean rect) {
@@ -91,32 +95,6 @@ public class ImgUtil {
         for (Map.Entry<String, String> entry : map.entrySet()) builder.addHeader(UrlUtil.fixHeader(entry.getKey()), entry.getValue());
     }
 
-    public static byte[] resize(byte[] bytes) {
-        Bitmap bitmap = crop(BitmapFactory.decodeByteArray(bytes, 0, bytes.length));
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        bitmap.compress(Bitmap.CompressFormat.JPEG, 100, baos);
-        return baos.toByteArray();
-    }
-
-    private static Bitmap crop(Bitmap source) {
-        int newWidth = ResUtil.getScreenWidth();
-        int newHeight = ResUtil.getScreenHeight();
-        int sourceWidth = source.getWidth();
-        int sourceHeight = source.getHeight();
-        float xScale = (float) newWidth / sourceWidth;
-        float yScale = (float) newHeight / sourceHeight;
-        float scale = Math.max(xScale, yScale);
-        float scaledWidth = scale * sourceWidth;
-        float scaledHeight = scale * sourceHeight;
-        float left = (newWidth - scaledWidth) / 2;
-        float top = (newHeight - scaledHeight) / 2;
-        RectF rectF = new RectF(left, top, left + scaledWidth, top + scaledHeight);
-        Bitmap dest = Bitmap.createBitmap(newWidth, newHeight, source.getConfig());
-        Canvas canvas = new Canvas(dest);
-        canvas.drawBitmap(source, null, rectF, null);
-        return dest;
-    }
-
     private static RequestListener<Bitmap> getListener(ImageView view) {
         return getListener(view, ImageView.ScaleType.CENTER);
     }
@@ -125,8 +103,8 @@ public class ImgUtil {
         return new RequestListener<>() {
             @Override
             public boolean onLoadFailed(@Nullable GlideException e, Object model, @NonNull Target<Bitmap> target, boolean isFirstResource) {
-                view.setScaleType(scaleType);
                 view.setImageResource(R.drawable.ic_img_error);
+                view.setScaleType(scaleType);
                 return true;
             }
 

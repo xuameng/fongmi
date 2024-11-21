@@ -114,7 +114,6 @@ public class TypeFragment extends BaseFragment implements CustomScroller.Callbac
 
     @Override
     protected void initEvent() {
-        mBinding.swipeLayout.setEnabled(!isHome());
         mBinding.swipeLayout.setOnRefreshListener(this);
         mBinding.recycler.addOnScrollListener(mScroller = new CustomScroller(this));
     }
@@ -139,6 +138,12 @@ public class TypeFragment extends BaseFragment implements CustomScroller.Callbac
         mViewModel = new ViewModelProvider(this).get(SiteViewModel.class);
         mViewModel.result.observe(getViewLifecycleOwner(), this::setAdapter);
     }
+
+    private void getHome() {
+        mViewModel.homeContent();
+        mAdapter.clear();
+    }
+
 
     private void getVideo() {
         mScroller.reset();
@@ -210,7 +215,8 @@ public class TypeFragment extends BaseFragment implements CustomScroller.Callbac
 
     @Override
     public void onRefresh() {
-        getVideo();
+        if (isHome()) getHome();
+        else getVideo();
     }
 
     @Override
@@ -222,7 +228,9 @@ public class TypeFragment extends BaseFragment implements CustomScroller.Callbac
 
     @Override
     public void onItemClick(Vod item) {
-        if (item.isFolder()) {
+        if (item.isAction()) {
+            mViewModel.action(getKey(), item.getAction());
+        } else if (item.isFolder()) {
             mPages.add(Page.get(item, findPosition()));
             getVideo(item.getVodId(), "1");
         } else {

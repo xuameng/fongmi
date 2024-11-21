@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.provider.Settings;
 
 import com.fongmi.android.tv.player.Players;
+import com.fongmi.android.tv.utils.LanguageUtil;
 import com.github.catvod.utils.Prefers;
 
 public class Setting {
@@ -145,14 +146,6 @@ public class Setting {
         Prefers.put("scale_live", scale);
     }
 
-    public static int getSubtitle() {
-        return Math.min(Math.max(Prefers.getInt("subtitle", 16), 14), 48);
-    }
-
-    public static void putSubtitle(int subtitle) {
-        Prefers.put("subtitle", subtitle);
-    }
-
     public static int getHttp() {
         return Prefers.getInt("exo_http", 1);
     }
@@ -193,12 +186,28 @@ public class Setting {
         Prefers.put("background", background);
     }
 
+    public static int getRtsp() {
+        return Prefers.getInt("rtsp");
+    }
+
+    public static void putRtsp(int rtsp) {
+        Prefers.put("rtsp", rtsp);
+    }
+
     public static int getSiteMode() {
-        return Prefers.getInt("site_mode");
+        return Prefers.getInt("site_mode", 1);
     }
 
     public static void putSiteMode(int mode) {
         Prefers.put("site_mode", mode);
+    }
+
+    public static int getSyncMode() {
+        return Prefers.getInt("sync_mode");
+    }
+
+    public static void putSyncMode(int mode) {
+        Prefers.put("sync_mode", mode);
     }
 
     public static boolean isBootLive() {
@@ -239,6 +248,14 @@ public class Setting {
 
     public static void putUpdate(boolean update) {
         Prefers.put("update", update);
+    }
+
+    public static boolean isPlayWithOthers() {
+        return Prefers.getBoolean("play_with_others", false);
+    }
+
+    public static void putPlayWithOthers(boolean play) {
+        Prefers.put("play_with_others", play);
     }
 
     public static boolean isDanmu() {
@@ -285,14 +302,6 @@ public class Setting {
         return Math.min(Math.max(Prefers.getInt("danmu_alpha", 90), 10), 100);
     }
 
-    public static void putDanmuSync(boolean sync) {
-        Prefers.put("danmu_sync", sync);
-    }
-
-    public static boolean isDanmuSync() {
-        return Prefers.getBoolean("danmu_sync", false);
-    }
-
     public static void putDanmuAlpha(int alpha) {
         Prefers.put("danmu_alpha", alpha);
     }
@@ -313,12 +322,36 @@ public class Setting {
         Prefers.put("exo_tunnel", tunnel);
     }
 
-    public static boolean isBackupAuto() {
-        return Prefers.getBoolean("backup_auto");
+    public static int getBackupMode() {
+        return Prefers.getInt("backup_mode", 1);
     }
 
-    public static void putBackupAuto(boolean auto) {
-        Prefers.put("backup_auto", auto);
+    public static void putBackupMode(int auto) {
+        Prefers.put("backup_mode", auto);
+    }
+
+    public static boolean isZhuyin() {
+        return Prefers.getBoolean("zhuyin");
+    }
+
+    public static void putZhuyin(boolean zhuyin) {
+        Prefers.put("zhuyin", zhuyin);
+    }
+
+    public static float getSubtitleTextSize() {
+        return Prefers.getFloat("subtitle_text_size");
+    }
+
+    public static void putSubtitleTextSize(float value) {
+        Prefers.put("subtitle_text_size", value);
+    }
+
+    public static float getSubtitleBottomPadding() {
+        return Prefers.getFloat("subtitle_bottom_padding");
+    }
+
+    public static void putSubtitleBottomPadding(float value) {
+        Prefers.put("subtitle_bottom_padding", value);
     }
 
     public static float getThumbnail() {
@@ -373,6 +406,14 @@ public class Setting {
         Prefers.put("display_mini_progress", display);
     }
 
+    public static boolean isDisplayVideoTitle() {
+        return Prefers.getBoolean("display_video_title", false);
+    }
+
+    public static void putDisplayVideoTitle(boolean display) {
+        Prefers.put("display_video_title", display);
+    }
+
     public static float getPlaySpeed() {
         return Prefers.getFloat("play_speed", 1.0f);
     }
@@ -421,12 +462,12 @@ public class Setting {
         return Prefers.getInt("small_window_back_key", 0);
     }
 
-    public static void putHomeChangeConfig(boolean change) {
-        Prefers.put("home_change_config", change);
+    public static void putHomeDisplayName(boolean change) {
+        Prefers.put("home_display_name", change);
     }
 
-    public static boolean isHomeChangeConfig() {
-        return Prefers.getBoolean("home_change_config", false);
+    public static boolean isHomeDisplayName() {
+        return Prefers.getBoolean("home_display_name", false);
     }
 
     public static boolean isAggregatedSearch() {
@@ -442,7 +483,7 @@ public class Setting {
     }
 
     public static int getHomeUI() {
-        return Prefers.getInt("home_ui", 0);
+        return Prefers.getInt("home_ui", 1);
     }
 
     public static void putHomeButtons(String buttons) {
@@ -474,7 +515,15 @@ public class Setting {
     }
 
     public static int getConfigCache() {
-        return Math.min(Prefers.getInt("config_cache", 0), 8);
+        return Math.min(Prefers.getInt("config_cache", 0), 2);
+    }
+
+    public static void putLanguage(int key) {
+        Prefers.put("language", key);
+    }
+
+    public static int getLanguage() {
+        return Prefers.getInt("language", LanguageUtil.locale());
     }
 
     public static void putParseWebView(int key) {
@@ -484,4 +533,29 @@ public class Setting {
     public static int getParseWebView() {
         return Prefers.getInt("parse_webview", 0);
     }
+
+    public static boolean isSiteSearch() {
+        return Prefers.getBoolean("site_search", false);
+    }
+
+    public static void putSiteSearch(boolean search) {
+        Prefers.put("site_search", search);
+    }
+
+    public static boolean isRemoveAd() {
+        return Prefers.getBoolean("remove_ad", false);
+    }
+
+    public static void putRemoveAd(boolean remove) {
+        Prefers.put("remove_ad", remove);
+    }
+
+    public static String getThunderCacheDir() {
+        return Prefers.getString("thunder_cache_dir", "");
+    }
+
+    public static void putThunderCacheDir(String dir) {
+        Prefers.put("thunder_cache_dir", dir);
+    }
+
 }

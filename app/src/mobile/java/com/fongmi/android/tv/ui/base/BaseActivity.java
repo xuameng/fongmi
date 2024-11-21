@@ -16,7 +16,6 @@ import androidx.viewbinding.ViewBinding;
 
 import com.fongmi.android.tv.R;
 import com.fongmi.android.tv.Setting;
-import com.fongmi.android.tv.api.config.WallConfig;
 import com.fongmi.android.tv.event.RefreshEvent;
 import com.fongmi.android.tv.utils.FileUtil;
 import com.fongmi.android.tv.utils.ResUtil;
@@ -37,10 +36,15 @@ public abstract class BaseActivity extends AppCompatActivity {
         if (transparent()) setTransparent(this);
         setContentView(getBinding().getRoot());
         EventBus.getDefault().register(this);
-        setBackCallback();
-        setWall();
         initView(savedInstanceState);
+        setBackCallback();
         initEvent();
+    }
+
+    @Override
+    public void setContentView(View view) {
+        super.setContentView(view);
+        refreshWall();
     }
 
     protected Activity getActivity() {
@@ -105,17 +109,6 @@ public abstract class BaseActivity extends AppCompatActivity {
         });
     }
 
-    private void setWall() {
-        try {
-            if (!customWall()) return;
-            File file = FileUtil.getWall(Setting.getWall());
-            if (file.exists() && file.length() > 0) getWindow().setBackgroundDrawable(WallConfig.drawable(Drawable.createFromPath(file.getAbsolutePath())));
-            else getWindow().setBackgroundDrawableResource(ResUtil.getDrawable(file.getName()));
-        } catch (Exception e) {
-            getWindow().setBackgroundDrawableResource(R.drawable.wallpaper_1);
-        }
-    }
-
     private void setTransparent(Activity activity) {
         activity.getWindow().clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
         activity.getWindow().addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
@@ -123,11 +116,20 @@ public abstract class BaseActivity extends AppCompatActivity {
         activity.getWindow().setStatusBarColor(Color.TRANSPARENT);
     }
 
+    private void refreshWall() {
+        try {
+            if (!customWall()) return;
+            File file = FileUtil.getWall(Setting.getWall());
+            if (file.exists() && file.length() > 0) getWindow().setBackgroundDrawable(Drawable.createFromPath(file.getAbsolutePath()));
+            else getWindow().setBackgroundDrawableResource(ResUtil.getDrawable(file.getName()));
+        } catch (Exception e) {
+            getWindow().setBackgroundDrawableResource(R.drawable.wallpaper_1);
+        }
+    }
+
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onRefreshEvent(RefreshEvent event) {
-        if (event.getType() != RefreshEvent.Type.WALL) return;
-        WallConfig.get().setDrawable(null);
-        setWall();
+        if (event.getType() == RefreshEvent.Type.WALL) refreshWall();
     }
 
     @Override

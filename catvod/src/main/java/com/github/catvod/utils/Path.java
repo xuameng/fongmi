@@ -40,6 +40,15 @@ public class Path {
         return Init.context().getCacheDir();
     }
 
+    public static File thunderCache() {
+        File internal = Init.context().getCacheDir();
+        String dir = Prefers.getString("thunder_cache_dir", internal.getAbsolutePath());
+        if (dir.equals(internal.getAbsolutePath())) return internal;
+        File cache = new File(dir);
+        if (!cache.exists()) return internal;
+        return cache;
+    }
+
     public static File files() {
         return Init.context().getFilesDir();
     }
@@ -80,12 +89,20 @@ public class Path {
         return mkdir(new File(cache() + File.separator + "exo"));
     }
 
+    public static File epg() {
+        return mkdir(new File(cache() + File.separator + "epg"));
+    }
+
     public static File jpa() {
-        return mkdir(new File(cache() + File.separator + "jpa"));
+        return mkdir(new File(thunderCache() + File.separator + "jpa"));
     }
 
     public static File thunder() {
-        return mkdir(new File(cache() + File.separator + "thunder"));
+        return mkdir(new File(thunderCache() + File.separator + "thunder"));
+    }
+
+    public static File restore() {
+        return mkdir(new File(cache() + File.separator + "restore"));
     }
 
     public static File root(String name) {
@@ -104,8 +121,16 @@ public class Path {
         return new File(files(), name);
     }
 
+    public static File epg(String name) {
+        return new File(epg(), name);
+    }
+
     public static File js(String name) {
         return new File(js(), name);
+    }
+
+    public static File py(String name) {
+        return new File(py(), name);
     }
 
     public static File jar(String name) {
@@ -147,6 +172,19 @@ public class Path {
         } catch (IOException e) {
             e.printStackTrace();
             return "";
+        }
+    }
+
+    public static byte[] readToByte(File file) {
+        try {
+            FileInputStream is = new FileInputStream(file);
+            byte[] data = new byte[is.available()];
+            is.read(data);
+            is.close();
+            return data;
+        } catch (IOException e) {
+            e.printStackTrace();
+            return new byte[0];
         }
     }
 
